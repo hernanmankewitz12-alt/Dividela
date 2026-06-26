@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  --font-geist: 'Geist', system-ui, sans-serif;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist);
+}
+
+* {
+  box-sizing: border-box;
+}
