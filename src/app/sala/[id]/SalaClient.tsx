@@ -337,6 +337,29 @@ export default function SalaClient({ sala: initialSala }: { sala: RoomWithItems 
         )
       })()}
 
+      {/* El resto */}
+      {totalesPorPersona.size > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
+          <h2 className="font-semibold text-gray-700 text-sm mb-3">Lo que paga el resto</h2>
+          <div className="space-y-2">
+            {[...personData.entries()]
+              .filter(([persona]) => persona !== currentUser)
+              .map(([persona, { subtotal, propina }]) => {
+                let descuento = 0
+                if (sala.descuento_tipo === 'porcentaje') descuento = subtotal * (sala.descuento_valor / 100)
+                else if (sala.descuento_tipo === 'fijo') descuento = sala.descuento_valor / Math.max(1, sala.descuento_personas)
+                const total = subtotal + propina - descuento
+                return (
+                  <div key={persona} className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">{persona}</span>
+                    <span className="font-semibold text-gray-900">{formatCLP(total)}</span>
+                  </div>
+                )
+              })}
+          </div>
+        </div>
+      )}
+
       {/* Modal de item */}
       {modal && modalItem && (
         <div
