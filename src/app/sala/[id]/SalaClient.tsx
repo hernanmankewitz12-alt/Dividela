@@ -287,41 +287,55 @@ export default function SalaClient({ sala: initialSala }: { sala: RoomWithItems 
         })}
       </div>
 
-      {/* Totales por persona */}
-      {totalesPorPersona.size > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Cuánto le toca a cada uno</h2>
-          <div className="space-y-4">
-            {[...personData.entries()].map(([persona, { subtotal, propina }]) => {
-              let descuento = 0
-              if (sala.descuento_tipo === 'porcentaje') descuento = subtotal * (sala.descuento_valor / 100)
-              else if (sala.descuento_tipo === 'fijo') descuento = sala.descuento_valor / Math.max(1, sala.descuento_personas)
-              const total = subtotal + propina - descuento
-              const isMe = persona === currentUser
-              return (
-                <div key={persona} className={`rounded-xl p-3 ${isMe ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`font-semibold text-sm ${isMe ? 'text-blue-700' : 'text-gray-700'}`}>
-                      {persona}{isMe ? ' (tú)' : ''}
-                    </span>
-                    <span className={`font-bold ${isMe ? 'text-blue-700' : 'text-gray-900'}`}>{formatCLP(total)}</span>
+      {/* Mi resumen */}
+      {currentUser && personData.has(currentUser) && (() => {
+        const { subtotal, propina } = personData.get(currentUser)!
+        let descuento = 0
+        if (sala.descuento_tipo === 'porcentaje') descuento = subtotal * (sala.descuento_valor / 100)
+        else if (sala.descuento_tipo === 'fijo') descuento = sala.descuento_valor / Math.max(1, sala.descuento_personas)
+        const total = subtotal + propina - descuento
+
+        const misItems = sala.items.flatMap(item =>
+          item.claims
+            .filter(c => c.nombre_persona === currentUser)
+            .map(c => ({
+              nombre: item.nombre,
+              cantidad: item.cantidad ?? 1,
+              precio: item.precio,
+              num: c.fracciones_num,
+              den: c.fracciones_den,
+              monto: item.precio * (item.cantidad ?? 1) * (c.fracciones_num / c.fracciones_den),
+            }))
+        )
+
+        return (
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6">
+            <h2 className="font-bold text-blue-800 mb-3">Tu cuenta, {currentUser}</h2>
+
+            <div className="space-y-1.5 mb-3">
+              {misItems.map((it, i) => {
+                const label = it.den === 1 ? 'entero' : it.den === it.cantidad && it.cantidad > 1 ? `${it.num} de ${it.cantidad}` : `1 de ${it.den}`
+                return (
+                  <div key={i} className="flex justify-between text-sm text-blue-700">
+                    <span>{it.nombre} <span className="text-blue-400 text-xs">({label})</span></span>
+                    <span>{formatCLP(it.monto)}</span>
                   </div>
-                  <div className="space-y-0.5 text-xs text-gray-400">
-                    <div className="flex justify-between"><span>Subtotal</span><span>{formatCLP(subtotal)}</span></div>
-                    {sala.incluir_propina && <div className="flex justify-between"><span>Propina ({sala.propina_porcentaje}%)</span><span>+{formatCLP(propina)}</span></div>}
-                    {descuento > 0 && (
-                      <div className="flex justify-between text-blue-500">
-                        <span>Descuento {sala.descuento_tipo === 'porcentaje' ? `(${sala.descuento_valor}%)` : 'fijo'}</span>
-                        <span>−{formatCLP(descuento)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+
+            <div className="border-t border-blue-200 pt-3 space-y-1 text-xs text-blue-500">
+              <div className="flex justify-between"><span>Subtotal</span><span>{formatCLP(subtotal)}</span></div>
+              {sala.incluir_propina && <div className="flex justify-between"><span>Propina ({sala.propina_porcentaje}%)</span><span>+{formatCLP(propina)}</span></div>}
+              {descuento > 0 && <div className="flex justify-between"><span>Descuento</span><span>−{formatCLP(descuento)}</span></div>}
+            </div>
+            <div className="flex justify-between font-black text-blue-800 text-lg mt-2 pt-2 border-t border-blue-200">
+              <span>Tu total</span>
+              <span>{formatCLP(total)}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Modal de item */}
       {modal && modalItem && (
