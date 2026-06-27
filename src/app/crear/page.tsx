@@ -9,6 +9,7 @@ type DescuentoTipo = 'ninguno' | 'porcentaje' | 'fijo'
 
 export default function CrearPage() {
   const router = useRouter()
+  const [nombre, setNombre] = useState('')
   const [lugar, setLugar] = useState('')
   const [items, setItems] = useState<ItemInput[]>([{ nombre: '', precio: '', cantidad: 1 }])
   const [participantes, setParticipantes] = useState<string[]>([])
@@ -113,6 +114,7 @@ export default function CrearPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        nombre: nombre.trim() || undefined,
         nombre_lugar: lugar.trim(),
         propina_porcentaje: parseInt(propinaPct, 10) || 10,
         incluir_propina: incluirPropina,
@@ -132,6 +134,10 @@ export default function CrearPage() {
     setLoading(false)
 
     if (!res.ok) return setError(data.error ?? 'Error al crear la sala')
+
+    const existing: string[] = JSON.parse(localStorage.getItem('dividiendola_rooms') ?? '[]')
+    localStorage.setItem('dividiendola_rooms', JSON.stringify([data.id, ...existing]))
+
     router.push(`/sala/${data.id}`)
   }
 
@@ -174,9 +180,23 @@ export default function CrearPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Lugar */}
+        {/* Nombre del evento (opcional) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del lugar</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del evento <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Ej: Noche del viernes, Cumpleaños de Ana..."
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="w-full border border-gray-200 bg-gray-50 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+          />
+        </div>
+
+        {/* Primera boleta */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Lugar / Primera boleta</label>
           <input
             type="text"
             placeholder="Ej: El Rincón, Sushi Maki, cumpleaños..."

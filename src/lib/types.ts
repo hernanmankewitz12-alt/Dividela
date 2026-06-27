@@ -1,18 +1,26 @@
 export type Room = {
   id: string
+  nombre: string | null
+  nombre_lugar: string
+  estado: 'abierta' | 'completa'
+  created_at: string
+}
+
+export type Boleta = {
+  id: string
+  room_id: string
   nombre_lugar: string
   propina_porcentaje: number
   incluir_propina: boolean
   descuento_tipo: 'ninguno' | 'porcentaje' | 'fijo'
   descuento_valor: number
   descuento_personas: number
-  estado: 'abierta' | 'completa'
   created_at: string
 }
 
 export type Item = {
   id: string
-  room_id: string
+  boleta_id: string
   nombre: string
   precio: number
   cantidad: number
@@ -36,4 +44,8 @@ export type Participant = {
 }
 
 export type ItemWithClaims = Item & { claims: Claim[] }
-export type RoomWithItems = Room & { items: ItemWithClaims[]; participants: Participant[] }
+export type BoletaWithItems = Boleta & { items: ItemWithClaims[] }
+export type RoomWithBoletas = Room & { boletas: BoletaWithItems[]; participants: Participant[] }
+
+// alias for backward compat in mis-salas
+export type RoomWithItems = RoomWithBoletas

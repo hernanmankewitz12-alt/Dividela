@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createSupabaseServer } from '@/lib/supabase-server'
-import type { RoomWithItems } from '@/lib/types'
+import type { RoomWithBoletas } from '@/lib/types'
 import SalaClient from './SalaClient'
 
 export default async function SalaPage(props: PageProps<'/sala/[id]'>) {
@@ -15,12 +15,12 @@ export default async function SalaPage(props: PageProps<'/sala/[id]'>) {
 
   if (roomError || !room) notFound()
 
-  const [{ data: items }, { data: participants }] = await Promise.all([
-    supabase.from('items').select('*, claims(*)').eq('room_id', id).order('created_at'),
+  const [{ data: boletas }, { data: participants }] = await Promise.all([
+    supabase.from('boletas').select('*, items(*, claims(*))').eq('room_id', id).order('created_at'),
     supabase.from('participants').select('*').eq('room_id', id).order('created_at'),
   ])
 
-  const sala: RoomWithItems = { ...room, items: items ?? [], participants: participants ?? [] }
+  const sala: RoomWithBoletas = { ...room, boletas: boletas ?? [], participants: participants ?? [] }
 
   return <SalaClient sala={sala} />
 }

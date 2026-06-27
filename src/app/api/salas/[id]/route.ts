@@ -14,14 +14,14 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/salas/[id]'>) {
     return Response.json({ error: 'Sala no encontrada' }, { status: 404 })
   }
 
-  const [{ data: items, error: itemsError }, { data: participants }] = await Promise.all([
-    supabase.from('items').select('*, claims(*)').eq('room_id', id).order('created_at'),
+  const [{ data: boletas, error: boletasError }, { data: participants }] = await Promise.all([
+    supabase.from('boletas').select('*, items(*, claims(*))').eq('room_id', id).order('created_at'),
     supabase.from('participants').select('*').eq('room_id', id).order('created_at'),
   ])
 
-  if (itemsError) return Response.json({ error: itemsError.message }, { status: 500 })
+  if (boletasError) return Response.json({ error: boletasError.message }, { status: 500 })
 
-  return Response.json({ ...room, items: items ?? [], participants: participants ?? [] })
+  return Response.json({ ...room, boletas: boletas ?? [], participants: participants ?? [] })
 }
 
 export async function PATCH(req: Request, ctx: RouteContext<'/api/salas/[id]'>) {
