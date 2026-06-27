@@ -290,16 +290,35 @@ export default function SalaClient({ sala: initialSala }: { sala: RoomWithItems 
       {/* Totales por persona */}
       {totalesPorPersona.size > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-3">Cuánto le toca a cada uno</h2>
-          <div className="space-y-2">
-            {[...totalesPorPersona.entries()].map(([persona, total]) => (
-              <div key={persona} className={`flex items-center justify-between py-1 ${persona === currentUser ? 'font-semibold' : ''}`}>
-                <span className={persona === currentUser ? 'text-blue-700' : 'text-gray-700'}>
-                  {persona}{persona === currentUser ? ' (tú)' : ''}
-                </span>
-                <span className={persona === currentUser ? 'text-blue-700' : 'text-gray-900'}>{formatCLP(total)}</span>
-              </div>
-            ))}
+          <h2 className="font-semibold text-gray-800 mb-4">Cuánto le toca a cada uno</h2>
+          <div className="space-y-4">
+            {[...personData.entries()].map(([persona, { subtotal, propina }]) => {
+              let descuento = 0
+              if (sala.descuento_tipo === 'porcentaje') descuento = subtotal * (sala.descuento_valor / 100)
+              else if (sala.descuento_tipo === 'fijo') descuento = sala.descuento_valor / Math.max(1, sala.descuento_personas)
+              const total = subtotal + propina - descuento
+              const isMe = persona === currentUser
+              return (
+                <div key={persona} className={`rounded-xl p-3 ${isMe ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`font-semibold text-sm ${isMe ? 'text-blue-700' : 'text-gray-700'}`}>
+                      {persona}{isMe ? ' (tú)' : ''}
+                    </span>
+                    <span className={`font-bold ${isMe ? 'text-blue-700' : 'text-gray-900'}`}>{formatCLP(total)}</span>
+                  </div>
+                  <div className="space-y-0.5 text-xs text-gray-400">
+                    <div className="flex justify-between"><span>Subtotal</span><span>{formatCLP(subtotal)}</span></div>
+                    {sala.incluir_propina && <div className="flex justify-between"><span>Propina ({sala.propina_porcentaje}%)</span><span>+{formatCLP(propina)}</span></div>}
+                    {descuento > 0 && (
+                      <div className="flex justify-between text-blue-500">
+                        <span>Descuento {sala.descuento_tipo === 'porcentaje' ? `(${sala.descuento_valor}%)` : 'fijo'}</span>
+                        <span>−{formatCLP(descuento)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
